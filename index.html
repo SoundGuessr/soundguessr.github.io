@@ -84,7 +84,37 @@ button {
 
 #roundTimer {
     display:flex; justify-content:space-between;
-    font-size:22px; margin-bottom:15px;
+    font-size:22px; margin-bottom:10px;
+}
+
+#timer {
+    transition: all 0.3s ease;
+}
+
+.pulse {
+    animation: pulse 0.7s infinite alternate;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+#progressContainer {
+    width: 100%;
+    height: 12px;
+    background: #333;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+#progressBar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg,#4ec3ff,#ff6b6b);
+    border-radius: 10px;
+    transition: width 0.5s ease;
 }
 
 #info {
@@ -113,6 +143,10 @@ button {
     <button id="startBtn" disabled>Ładowanie</button>
 
     <div id="gameArea" style="display:none;">
+        <div id="progressContainer">
+            <div id="progressBar"></div>
+        </div>
+
         <div id="roundTimer">
             <div id="roundInfo">Runda 1 z 8</div>
             <div id="timer">30s</div>
@@ -141,6 +175,9 @@ let round=1, score=0, maxPoints=1000, timeLeft=30, timer;
 
 let startBtn = document.getElementById("startBtn");
 let playBtn = document.getElementById("playBtn");
+let progressBar = document.getElementById("progressBar");
+let timerEl = document.getElementById("timer");
+
 let loadingTexts=["Ładowanie.","Ładowanie..","Ładowanie...","Ładowanie.","Ładowanie..","Ładowanie..."];
 let loadingIndex=0;
 let loadingInterval = setInterval(()=>{
@@ -179,24 +216,34 @@ function startGame(){
     nextRound();
 }
 
+function updateProgress(){
+    let percent = ((round-1)/8)*100;
+    progressBar.style.width = percent + "%";
+}
+
 function nextRound(){
     document.getElementById("backBtn").style.display="none";
     if(audio) audio.pause(); // przerywamy poprzedni dźwięk
+
     if(round>8){
+        progressBar.style.width="100%";
         document.getElementById("result").innerHTML="<b>Twój wynik: "+score+" pkt</b>";
         playBtn.style.display="none";
         document.getElementById("guessBox").style.display="none";
         document.getElementById("backBtn").style.display="inline-block";
         document.getElementById("roundInfo").innerText="";
-        document.getElementById("timer").innerText="";
+        timerEl.innerText="";
         return;
     }
+
+    updateProgress();
 
     const idx=Math.floor(Math.random()*pool.length);
     current=pool.splice(idx,1)[0];
 
     document.getElementById("roundInfo").innerText=`Runda ${round} z 8`;
-    document.getElementById("timer").innerText="30s";
+    timerEl.innerText="30s";
+    timerEl.classList.remove("pulse");
     document.getElementById("guessBox").style.display="block";
     document.getElementById("answerInput").value="";
     document.getElementById("result").innerText="";
@@ -217,8 +264,22 @@ function nextRound(){
 function startTimer(){
     clearInterval(timer);
     timeLeft=30;
+    timerEl.style.color="#eee";
+    timerEl.classList.remove("pulse");
+
     timer=setInterval(()=>{
-        document.getElementById("timer").innerText=timeLeft+"s";
+        timerEl.innerText=timeLeft+"s";
+        if(timeLeft<=10 && timeLeft>=6){
+            timerEl.style.color="orange";
+        } else if(timeLeft<=5 && timeLeft>=3){
+            timerEl.style.color="red";
+        } else if(timeLeft<=2){
+            timerEl.style.color="#ff1a1a";
+            timerEl.classList.add("pulse");
+        } else {
+            timerEl.style.color="#eee";
+            timerEl.classList.remove("pulse");
+        }
         timeLeft--;
         if(timeLeft<0){
             clearInterval(timer);
