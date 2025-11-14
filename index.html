@@ -6,51 +6,52 @@
 <style>
 body {
     font-family: 'Poppins', sans-serif;
-    margin: 0; 
+    margin: 0;
     padding: 0;
     background: #121212;
-    display: flex; 
-    justify-content: center; 
+    display: flex;
+    justify-content: center;
     align-items: center;
-    min-height: 100vh; 
+    min-height: 100vh;
     color: #eee;
 }
 
 #container {
-    background: #1f1f1f;
-    width: 90%;
+    background: #1e1e1e;
+    width: 95%;
     max-width: 480px;
-    border-radius: 22px;
+    border-radius: 18px 24px 20px 22px; /* nieregularny border */
     padding: 28px 22px;
-    box-shadow: 0 12px 22px rgba(0,0,0,0.45);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.6); /* trochę nieregularny cień */
     text-align: center;
-    transition: all 0.3s ease-in-out;
+    transition: all 0.35s ease-in-out;
 }
 
 h1 {
-    font-size: 34px;
-    margin-bottom: 18px;
-    color: #ff5f5f;
+    font-size: 36px;
+    margin-bottom: 22px; /* luźniejszy margines */
+    color: #ff6b6b;
+    letter-spacing: 0.5px; /* lekko „ludzka” czcionka */
 }
 
 button {
-    padding: 14px 24px;
-    margin: 8px;
-    font-size: 17px;
+    padding: 14px 26px;
+    margin: 10px 6px; /* mniej symetryczne marginesy */
+    font-size: 18px;
     font-weight: 600;
-    border-radius: 13px;
+    border-radius: 12px 16px 14px 13px; /* lekko nieregularne */
     border: none;
     cursor: pointer;
-    transition: transform 0.2s ease, opacity 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 #startBtn {
-    background: linear-gradient(40deg, #ff5f5f, #ff8a5f);
+    background: linear-gradient(45deg,#ff6b6b,#ff9b6b);
     color: #fff;
-    font-size: 23px;
+    font-size: 24px;
     width: 80%;
     margin-top: 20px;
-    box-shadow: 0 0 12px rgba(255,95,95,0.4);
+    box-shadow: 0 0 11px rgba(255,107,107,0.45);
 }
 
 #startBtn:disabled {
@@ -59,61 +60,61 @@ button {
 }
 
 #playBtn {
-    background: linear-gradient(40deg, #6bffb0, #00bfff);
+    background: linear-gradient(45deg,#6bffb0,#00c2ff);
     color: #000;
-    font-size: 19px;
-    box-shadow: 0 0 10px rgba(0,191,255,0.4);
+    font-size: 20px;
+    box-shadow: 0 0 10px rgba(0,194,255,0.45);
 }
 
 #playBtn:disabled {
-    opacity: 0.5; 
+    opacity: 0.5;
     cursor: default;
 }
 
 #guessBox input {
-    width: 88%;
+    width: 90%;
     padding: 12px;
-    font-size: 17px;
-    border-radius: 11px;
+    font-size: 18px;
+    border-radius: 10px 14px 12px 11px; /* luźniejsze kształty */
     border: 2px solid #555;
-    margin-top: 14px;
-    background: #2b2b2b;
+    margin-top: 16px;
+    background: #2a2a2a;
     color: #eee;
 }
 
 #guessBox button {
-    background: linear-gradient(40deg, #ff5f5f, #ff8a5f);
+    background: linear-gradient(45deg,#ff6b6b,#ff9b6b);
     color: #fff;
-    font-size: 17px;
+    font-size: 18px;
     margin-top: 10px;
-    box-shadow: 0 0 9px rgba(255,95,95,0.4);
+    box-shadow: 0 0 9px rgba(255,107,107,0.45);
 }
 
 #roundTimer {
-    display: flex; 
+    display: flex;
     justify-content: space-between;
-    font-size: 21px; 
-    margin-bottom: 12px;
+    font-size: 22px;
+    margin-bottom: 10px;
 }
 
 #timer {
-    transition: all 0.25s ease-in-out;
+    transition: all 0.3s ease;
 }
 
 .pulse {
-    animation: pulse 0.7s infinite alternate;
+    animation: pulse 0.65s infinite alternate; /* lekko nieregularne tempo */
 }
 
 @keyframes pulse {
     0% { transform: scale(1); }
-    50% { transform: scale(1.15); }
+    50% { transform: scale(1.18); }
     100% { transform: scale(1); }
 }
 
 #progressContainer {
     width: 100%;
     height: 12px;
-    background: #2f2f2f;
+    background: #333;
     border-radius: 9px;
     margin-bottom: 14px;
 }
@@ -121,32 +122,32 @@ button {
 #progressBar {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, #4ec3ff, #ff5f5f);
+    background: linear-gradient(90deg,#4ec3ff,#ff6b6b);
     border-radius: 9px;
-    transition: width 0.4s ease;
+    transition: width 0.45s ease;
 }
 
 #info {
-    font-size: 15px; 
-    margin-top: 8px; 
-    color: #bbb;
+    font-size: 16px;
+    margin-top: 8px;
+    color: #ccc;
 }
 
 #result {
-    font-size: 21px; 
-    margin-top: 18px; 
+    font-size: 22px;
+    margin-top: 20px;
     min-height: 28px;
 }
 
 #backBtn {
-    background: linear-gradient(45deg, #ffa000, #ff5f5f);
+    background: linear-gradient(45deg,#ffa500,#ff6b6b);
     color: #fff;
-    font-size: 19px;
-    padding: 14px 24px;
-    border-radius: 13px;
+    font-size: 20px;
+    padding: 14px 26px;
+    border-radius: 13px 16px 14px 12px;
     margin-top: 15px;
     display: none;
-    box-shadow: 0 0 9px rgba(255,160,0,0.4);
+    box-shadow: 0 0 9px rgba(255,165,0,0.45);
 }
 
 </style>
