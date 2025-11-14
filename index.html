@@ -61,7 +61,7 @@ button {
     box-shadow:0 0 10px rgba(0,194,255,0.5);
 }
 
-#playBtn:hover:not(:disabled) { transform: scale(1.05); }
+#playBtn:disabled { opacity:0.5; cursor: default; }
 
 #guessBox input {
     width:90%;
@@ -118,7 +118,7 @@ button {
             <div id="timer">30s</div>
         </div>
 
-        <button id="playBtn">▶ ODTWÓRZ DŹWIĘK</button>
+        <button id="playBtn" disabled>ZABLOKOWANY (Odtwarzanie)</button>
         <div id="info">Każde dodatkowe odtworzenie: <b>-50 pkt</b></div>
 
         <div id="guessBox">
@@ -140,6 +140,7 @@ let sounds=[], pool=[], current=null, audio=null;
 let round=1, score=0, maxPoints=1000, timeLeft=30, timer;
 
 let startBtn = document.getElementById("startBtn");
+let playBtn = document.getElementById("playBtn");
 let loadingTexts=["Ładowanie.","Ładowanie..","Ładowanie...","Ładowanie.","Ładowanie..","Ładowanie..."];
 let loadingIndex=0;
 let loadingInterval = setInterval(()=>{
@@ -166,7 +167,11 @@ fetch(GITHUB_API)
         startBtn.innerText="Błąd!";
     });
 
-startBtn.addEventListener("click",()=>{startBtn.style.display="none"; document.getElementById("gameArea").style.display="block"; startGame();});
+startBtn.addEventListener("click",()=>{
+    startBtn.style.display="none";
+    document.getElementById("gameArea").style.display="block";
+    startGame();
+});
 
 function startGame(){
     pool=[...sounds];
@@ -176,9 +181,10 @@ function startGame(){
 
 function nextRound(){
     document.getElementById("backBtn").style.display="none";
+    if(audio) audio.pause(); // przerywamy poprzedni dźwięk
     if(round>8){
         document.getElementById("result").innerHTML="<b>Twój wynik: "+score+" pkt</b>";
-        document.getElementById("playBtn").style.display="none";
+        playBtn.style.display="none";
         document.getElementById("guessBox").style.display="none";
         document.getElementById("backBtn").style.display="inline-block";
         document.getElementById("roundInfo").innerText="";
@@ -194,12 +200,14 @@ function nextRound(){
     document.getElementById("guessBox").style.display="block";
     document.getElementById("answerInput").value="";
     document.getElementById("result").innerText="";
-    document.getElementById("playBtn").innerText="▶ ODTWÓRZ DŹWIĘK";
-    document.getElementById("playBtn").disabled=false;
-    audio=new Audio(current.url);
+    
+    playBtn.innerText="ZABLOKOWANY (Odtwarzanie)";
+    playBtn.disabled=true;
 
+    audio=new Audio(current.url);
     audio.onended = ()=>{
-        document.getElementById("playBtn").innerText="Odtwórz ponownie";
+        playBtn.innerText="Odtwórz ponownie";
+        playBtn.disabled=false;
     }
 
     audio.play();
@@ -223,6 +231,12 @@ function playSound(){
     audio.play();
     maxPoints-=50;
     if(maxPoints<0) maxPoints=0;
+    playBtn.disabled=true;
+    playBtn.innerText="ZABLOKOWANY (Odtwarzanie)";
+    audio.onended = ()=>{
+        playBtn.innerText="Odtwórz ponownie";
+        playBtn.disabled=false;
+    }
 }
 
 function formatName(f){
