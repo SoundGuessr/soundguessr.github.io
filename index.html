@@ -6,89 +6,98 @@
 <style>
 body {
     font-family: 'Poppins', sans-serif;
-    margin:0; padding:0;
+    margin: 0; 
+    padding: 0;
     background: #121212;
-    display:flex; justify-content:center; align-items:center;
-    min-height:100vh; color:#eee;
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    min-height: 100vh; 
+    color: #eee;
 }
 
 #container {
-    background: #1e1e1e;
-    width: 95%;
+    background: #1f1f1f;
+    width: 90%;
     max-width: 480px;
-    border-radius: 20px;
-    padding: 30px 20px;
-    box-shadow:0 10px 20px rgba(0,0,0,0.5);
-    text-align:center;
-    transition:0.3s;
+    border-radius: 22px;
+    padding: 28px 22px;
+    box-shadow: 0 12px 22px rgba(0,0,0,0.45);
+    text-align: center;
+    transition: all 0.3s ease-in-out;
 }
 
 h1 {
-    font-size:36px;
-    margin-bottom:20px;
-    color:#ff6b6b;
+    font-size: 34px;
+    margin-bottom: 18px;
+    color: #ff5f5f;
 }
 
 button {
-    padding:15px 25px;
-    margin:10px;
-    font-size:18px;
-    font-weight:bold;
-    border-radius:14px;
-    border:none;
-    cursor:pointer;
-    transition:0.2s;
+    padding: 14px 24px;
+    margin: 8px;
+    font-size: 17px;
+    font-weight: 600;
+    border-radius: 13px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 #startBtn {
-    background: linear-gradient(45deg,#ff6b6b,#ff9b6b);
-    color:#fff;
-    font-size:24px;
-    width:80%;
-    margin-top:20px;
-    box-shadow:0 0 10px rgba(255,107,107,0.5);
+    background: linear-gradient(40deg, #ff5f5f, #ff8a5f);
+    color: #fff;
+    font-size: 23px;
+    width: 80%;
+    margin-top: 20px;
+    box-shadow: 0 0 12px rgba(255,95,95,0.4);
 }
 
 #startBtn:disabled {
     cursor: default;
-    opacity:0.6;
+    opacity: 0.65;
 }
 
 #playBtn {
-    background: linear-gradient(45deg,#6bffb0,#00c2ff);
-    color:#000;
-    font-size:20px;
-    box-shadow:0 0 10px rgba(0,194,255,0.5);
+    background: linear-gradient(40deg, #6bffb0, #00bfff);
+    color: #000;
+    font-size: 19px;
+    box-shadow: 0 0 10px rgba(0,191,255,0.4);
 }
 
-#playBtn:disabled { opacity:0.5; cursor: default; }
+#playBtn:disabled {
+    opacity: 0.5; 
+    cursor: default;
+}
 
 #guessBox input {
-    width:90%;
-    padding:12px;
-    font-size:18px;
-    border-radius:12px;
-    border:2px solid #555;
-    margin-top:15px;
-    background:#2a2a2a;
-    color:#eee;
+    width: 88%;
+    padding: 12px;
+    font-size: 17px;
+    border-radius: 11px;
+    border: 2px solid #555;
+    margin-top: 14px;
+    background: #2b2b2b;
+    color: #eee;
 }
 
 #guessBox button {
-    background: linear-gradient(45deg,#ff6b6b,#ff9b6b);
-    color:#fff;
-    font-size:18px;
-    margin-top:10px;
-    box-shadow:0 0 10px rgba(255,107,107,0.5);
+    background: linear-gradient(40deg, #ff5f5f, #ff8a5f);
+    color: #fff;
+    font-size: 17px;
+    margin-top: 10px;
+    box-shadow: 0 0 9px rgba(255,95,95,0.4);
 }
 
 #roundTimer {
-    display:flex; justify-content:space-between;
-    font-size:22px; margin-bottom:10px;
+    display: flex; 
+    justify-content: space-between;
+    font-size: 21px; 
+    margin-bottom: 12px;
 }
 
 #timer {
-    transition: all 0.3s ease;
+    transition: all 0.25s ease-in-out;
 }
 
 .pulse {
@@ -97,42 +106,49 @@ button {
 
 @keyframes pulse {
     0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
+    50% { transform: scale(1.15); }
     100% { transform: scale(1); }
 }
 
 #progressContainer {
     width: 100%;
     height: 12px;
-    background: #333;
-    border-radius: 10px;
-    margin-bottom: 15px;
+    background: #2f2f2f;
+    border-radius: 9px;
+    margin-bottom: 14px;
 }
 
 #progressBar {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg,#4ec3ff,#ff6b6b);
-    border-radius: 10px;
-    transition: width 0.5s ease;
+    background: linear-gradient(90deg, #4ec3ff, #ff5f5f);
+    border-radius: 9px;
+    transition: width 0.4s ease;
 }
 
 #info {
-    font-size:16px; margin-top:8px; color:#ccc;
+    font-size: 15px; 
+    margin-top: 8px; 
+    color: #bbb;
 }
 
-#result { font-size:22px; margin-top:20px; min-height:28px; }
+#result {
+    font-size: 21px; 
+    margin-top: 18px; 
+    min-height: 28px;
+}
 
 #backBtn {
-    background: linear-gradient(45deg,#ffa500,#ff6b6b);
-    color:#fff;
-    font-size:20px;
-    padding:15px 25px;
-    border-radius:14px;
-    margin-top:15px;
-    display:none;
-    box-shadow:0 0 10px rgba(255,165,0,0.5);
+    background: linear-gradient(45deg, #ffa000, #ff5f5f);
+    color: #fff;
+    font-size: 19px;
+    padding: 14px 24px;
+    border-radius: 13px;
+    margin-top: 15px;
+    display: none;
+    box-shadow: 0 0 9px rgba(255,160,0,0.4);
 }
+
 </style>
 </head>
 <body>
