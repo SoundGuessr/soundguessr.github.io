@@ -3,10 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>SoundGuessr</title>
-
-<!-- Puter AI -->
-<script src="https://js.puter.com/v2/"></script>
-
 <style>
 body {
     font-family: 'Poppins', sans-serif;
@@ -26,16 +22,14 @@ body {
     max-width: 480px;
     border-radius: 20px 18px 23px 19px;
     padding: 30px 22px;
-    box-shadow: 0 7px 20px rgba(0,0,0,0.55), 0 2px 5px rgba(255,255,255,0.02);
+    box-shadow: 0 7px 20px rgba(0,0,0,0.55);
     text-align: center;
-    transition: all 0.4s ease;
 }
 
 h1 {
     font-size: 36px;
     margin-bottom: 24px;
     color: #ff6b6b;
-    letter-spacing: 0.6px;
     transform: rotate(-0.3deg);
 }
 
@@ -44,43 +38,33 @@ button {
     margin: 10px 7px;
     font-size: 18px;
     font-weight: 600;
-    border-radius: 13px 15px 12px 16px;
+    border-radius: 12px;
     border: none;
     cursor: pointer;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 #startBtn {
     background: linear-gradient(48deg,#ff6b6b,#ff9b6b);
     color: #fff;
     font-size: 24px;
-    width: 78%;
-    margin-top: 22px;
-    box-shadow: 0 0 10px rgba(255,107,107,0.5), inset 0 -2px 5px rgba(0,0,0,0.2);
+    width: 80%;
 }
 
-#startBtn:disabled {
-    cursor: default;
-    opacity: 0.6;
-}
+#startBtn:disabled { opacity: 0.5; }
 
 #playBtn {
     background: linear-gradient(42deg,#6bffb0,#00c2ff);
     color: #000;
     font-size: 20px;
-    box-shadow: 0 1px 8px rgba(0,194,255,0.5);
 }
 
-#playBtn:disabled {
-    opacity: 0.5;
-    cursor: default;
-}
+#playBtn:disabled { opacity: 0.5; }
 
 #guessBox input {
     width: 88%;
     padding: 12px;
     font-size: 18px;
-    border-radius: 11px 13px 12px 14px;
+    border-radius: 11px;
     border: 2px solid #555;
     margin-top: 15px;
     background: #2a2a2a;
@@ -92,7 +76,6 @@ button {
     color: #fff;
     font-size: 18px;
     margin-top: 10px;
-    box-shadow: 0 0 8px rgba(255,107,107,0.45);
 }
 
 #roundTimer {
@@ -129,10 +112,9 @@ button {
     color: #fff;
     font-size: 20px;
     padding: 14px 26px;
-    border-radius: 14px 13px 12px 16px;
+    border-radius: 14px;
     margin-top: 15px;
     display: none;
-    box-shadow: 0 0 9px rgba(255,165,0,0.45);
 }
 </style>
 </head>
@@ -171,7 +153,8 @@ button {
 </div>
 
 <script>
-const GITHUB_API = "https://api.github.com/repos/SoundGuessr/soundguessr.github.io/contents/sounds";
+const API_SOUNDS = "https://api.github.com/repos/SoundGuessr/soundguessr.github.io/contents/sounds";
+let aliases = {};
 
 let sounds=[], pool=[], current=null, audio=null;
 let round=1, score=0, maxPoints=1000, timeLeft=30, timer;
@@ -181,15 +164,21 @@ let playBtn = document.getElementById("playBtn");
 let progressBar = document.getElementById("progressBar");
 let timerEl = document.getElementById("timer");
 
-let loadingFrames=["Ładowanie.","Ładowanie..","Ładowanie...","Ładowanie"];
-let li=0;
-
+/* LOADING ANIMATION */
+let frames=["Ładowanie.","Ładowanie..","Ładowanie..."];
+let fi=0;
 let loadingInterval=setInterval(()=>{
-    startBtn.innerText=loadingFrames[li];
-    li=(li+1)%loadingFrames.length;
+    startBtn.innerText=frames[fi];
+    fi=(fi+1)%frames.length;
 },350);
 
-fetch(GITHUB_API)
+/* LOAD ALIASES */
+fetch("aliases.json")
+    .then(r=>r.json())
+    .then(a=>aliases=a);
+
+/* LOAD SOUNDS */
+fetch(API_SOUNDS)
     .then(res=>res.json())
     .then(data=>{
         sounds = data.filter(x=>x.name.toLowerCase().endsWith(".m4a"))
@@ -249,10 +238,12 @@ function nextRound(){
     playBtn.disabled=true;
 
     audio=new Audio(current.url);
+
     audio.onended=()=>{
         playBtn.innerText="Odtwórz ponownie";
         playBtn.disabled=false;
     };
+
     audio.play();
     startTimer();
 }
@@ -282,46 +273,33 @@ function playSound(){
     }
 }
 
-function formatName(f){
-    let name=f.replace(".m4a","");
-    name=name.replace(/\d+$/,"");
-    name=name.replace(/[-_]/g," ");
-    return name.split(" ")
-               .map(w=>w.charAt(0).toUpperCase()+w.slice(1))
-               .join(" ");
+/* Convert filename → clean canonical name */
+function cleanName(f){
+    let name=f.replace(".m4a","")
+              .replace(/\d+$/,"")
+              .replace(/[_-]/g," ")
+              .toLowerCase();
+    return name;
 }
 
-/* 🔥🔥 AI CHECK — najważniejszy element 🔥🔥 */
-async function aiCheck(correct, user) {
-    const prompt = `
-Prawidłowa odpowiedź: "${correct}"
-Odpowiedź użytkownika: "${user}"
+/* Check using aliases.json */
+function answerMatches(correctBase, userAnswer){
+    userAnswer=userAnswer.toLowerCase().trim();
 
-Jeśli odpowiedź użytkownika jest poprawna, synonimiczna lub bardzo bliska znaczeniowo → wypisz tylko: y
-Jeśli jest błędna → wypisz tylko: n
-NIC więcej.
-    `;
+    if(!(correctBase in aliases)) return false;
 
-    try {
-        const res = await puter.ai.chat(prompt, {model:"gpt-5-nano"});
-        const out = String(res).trim().toLowerCase();
-        return out === "y";
-    } catch {
-        return false;
-    }
+    return aliases[correctBase].some(alias =>
+        userAnswer === alias.toLowerCase()
+    );
 }
 
-async function checkAnswer(){
-    let typed = document.getElementById("answerInput").value.trim();
+function checkAnswer(){
+    let typed = document.getElementById("answerInput").value.trim().toLowerCase();
     if(!typed) return;
 
-    let correct=formatName(current.file);
+    const base=cleanName(current.file);
 
-    document.getElementById("answerInput").disabled=true;
-
-    let ok = await aiCheck(correct, typed);
-
-    document.getElementById("answerInput").disabled=false;
+    const ok = answerMatches(base, typed);
 
     handleAnswer(ok);
 }
@@ -330,9 +308,11 @@ function handleAnswer(ok){
     clearInterval(timer);
     if(ok){
         score+=maxPoints;
-        document.getElementById("result").innerHTML=`<span style="color:#2ecc71;">✔ Dobrze! +${maxPoints} pkt</span>`;
+        document.getElementById("result").innerHTML=
+            `<span style="color:#2ecc71;">✔ Dobrze! +${maxPoints} pkt</span>`;
     } else {
-        document.getElementById("result").innerHTML=`<span style="color:#e74c3c;">✘ Źle! To było: ${formatName(current.file)}</span>`;
+        document.getElementById("result").innerHTML=
+            `<span style="color:#e74c3c;">✘ Źle! To było: ${cleanName(current.file)}</span>`;
     }
 
     maxPoints=1000;
