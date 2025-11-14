@@ -118,7 +118,7 @@ button {
             <div id="timer">30s</div>
         </div>
 
-        <button id="playBtn" disabled>ZABLOKOWANY (Odtwarzanie)</button>
+        <button id="playBtn" disabled>Odtwarzanie</button>
         <div id="info">Każde dodatkowe odtworzenie: <b>-50 pkt</b></div>
 
         <div id="guessBox">
@@ -201,7 +201,7 @@ function nextRound(){
     document.getElementById("answerInput").value="";
     document.getElementById("result").innerText="";
     
-    playBtn.innerText="ZABLOKOWANY (Odtwarzanie)";
+    playBtn.innerText="Odtwarzanie";
     playBtn.disabled=true;
 
     audio=new Audio(current.url);
