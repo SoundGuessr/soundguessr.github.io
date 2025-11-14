@@ -14,28 +14,63 @@ body {
 #container {
     background:#1e1e1e;
     width:95%; max-width:480px;
-    border-radius:20px; padding:30px;
-    text-align:center; box-shadow:0 7px 20px rgba(0,0,0,0.55);
+    border-radius:20px 18px 23px 19px;
+    padding:30px 22px;
+    box-shadow:0 7px 20px rgba(0,0,0,0.55), 0 2px 5px rgba(255,255,255,0.02);
+    text-align:center;
+    transition: all 0.4s ease;
 }
-h1 { font-size:36px; margin-bottom:24px; color:#ff6b6b; transform: rotate(-0.3deg);}
-button { padding:14px 28px; margin:10px; font-size:18px; font-weight:600; border-radius:12px; border:none; cursor:pointer;}
-#startBtn { background: linear-gradient(48deg,#ff6b6b,#ff9b6b); color:#fff; font-size:24px; width:80%; }
-#startBtn:disabled { opacity:0.5; }
-#playBtn { background: linear-gradient(42deg,#6bffb0,#00c2ff); color:#000; font-size:20px;}
-#playBtn:disabled { opacity:0.5; }
-#guessBox input { width:88%; padding:12px; font-size:18px; border-radius:11px; border:2px solid #555; margin-top:15px; background:#2a2a2a; color:#eee;}
-#guessBox button { background: linear-gradient(46deg,#ff6b6b,#ff9b6b); color:#fff; font-size:18px; margin-top:10px; }
+h1 {
+    font-size:36px; margin-bottom:24px; color:#ff6b6b;
+    letter-spacing:0.6px; transform: rotate(-0.3deg);
+}
+button {
+    padding:14px 28px; margin:10px 7px; font-size:18px; font-weight:600;
+    border-radius:13px 15px 12px 16px; border:none; cursor:pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+#startBtn {
+    background: linear-gradient(48deg,#ff6b6b,#ff9b6b);
+    color:#fff; font-size:24px; width:78%;
+    margin-top:22px;
+    box-shadow:0 0 10px rgba(255,107,107,0.5), inset 0 -2px 5px rgba(0,0,0,0.2);
+}
+#startBtn:disabled { cursor: default; opacity:0.6; }
+#playBtn {
+    background: linear-gradient(42deg,#6bffb0,#00c2ff);
+    color:#000; font-size:20px;
+    box-shadow:0 1px 8px rgba(0,194,255,0.5);
+}
+#playBtn:disabled { opacity:0.5; cursor: default; }
+#guessBox input {
+    width:88%; padding:12px; font-size:18px; border-radius:11px 13px 12px 14px;
+    border:2px solid #555; margin-top:15px; background:#2a2a2a; color:#eee;
+}
+#guessBox button {
+    background: linear-gradient(46deg,#ff6b6b,#ff9b6b); color:#fff;
+    font-size:18px; margin-top:10px;
+    box-shadow:0 0 8px rgba(255,107,107,0.45); transform: rotate(-0.2deg);
+}
 #roundTimer { display:flex; justify-content:space-between; font-size:22px; margin-bottom:10px; }
+#timer { transition: all 0.35s ease; }
+.pulse { animation: pulse 0.7s infinite alternate; }
+@keyframes pulse { 0%{transform:scale(1);}50%{transform:scale(1.16);}100%{transform:scale(1);} }
 #progressContainer { width:100%; height:12px; background:#333; border-radius:8px; margin-bottom:14px; }
 #progressBar { height:100%; width:0%; background: linear-gradient(90deg,#4ec3ff,#ff6b6b); border-radius:8px; transition: width 0.48s ease; }
+#info { font-size:16px; margin-top:8px; color:#ccc; }
 #result { font-size:22px; margin-top:20px; min-height:28px; }
-#backBtn { background: linear-gradient(44deg,#ffa500,#ff6b6b); color:#fff; font-size:20px; padding:14px 26px; border-radius:14px; margin-top:15px; display:none; }
+#backBtn {
+    background: linear-gradient(44deg,#ffa500,#ff6b6b); color:#fff; font-size:20px;
+    padding:14px 26px; border-radius:14px 13px 12px 16px;
+    margin-top:15px; display:none; box-shadow:0 0 9px rgba(255,165,0,0.45);
+    transform: rotate(0.2deg);
+}
 </style>
 </head>
 <body>
 <div id="container">
 <h1>🎧 SoundGuessr</h1>
-<button id="startBtn" disabled>Ładowanie...</button>
+<button id="startBtn" disabled>Ładowanie</button>
 
 <div id="gameArea" style="display:none;">
 <div id="progressContainer"><div id="progressBar"></div></div>
@@ -43,57 +78,50 @@ button { padding:14px 28px; margin:10px; font-size:18px; font-weight:600; border
     <div id="roundInfo">Runda 1 z 8</div>
     <div id="timer">30s</div>
 </div>
-
 <button id="playBtn" disabled>Odtwarzanie</button>
 <div id="info">Każde dodatkowe odtworzenie: <b>-50 pkt</b></div>
-
 <div id="guessBox">
 <h2>Co to za dźwięk?</h2>
 <input id="answerInput" placeholder="np. Upadek Telefonu" onkeydown="if(event.key==='Enter') checkAnswer()">
 <button onclick="checkAnswer()">Zatwierdź</button>
 </div>
-
 <div id="result"></div>
 <button id="backBtn" onclick="location.reload()">Powrót do menu głównego</button>
 </div>
 </div>
 
 <script>
-const API_SOUNDS="https://api.github.com/repos/SoundGuessr/soundguessr.github.io/contents/sounds";
+const GITHUB_API="https://api.github.com/repos/SoundGuessr/soundguessr.github.io/contents/sounds";
 let aliases={};
-
 let sounds=[], pool=[], current=null, audio=null;
 let round=1, score=0, maxPoints=1000, timeLeft=30, timer;
-
 let startBtn=document.getElementById("startBtn");
 let playBtn=document.getElementById("playBtn");
 let progressBar=document.getElementById("progressBar");
 let timerEl=document.getElementById("timer");
 
-let frames=["Ładowanie.","Ładowanie..","Ładowanie..."];
-let fi=0;
-let loadingInterval=setInterval(()=>{startBtn.innerText=frames[fi]; fi=(fi+1)%frames.length;},350);
-
-// NORMALIZE & FUZZY FUNCTIONS
-function normalize(t){return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g,"").trim();}
-function levenshtein(a,b){const m=[];for(let i=0;i<=b.length;i++) m[i]=[i];for(let j=0;j<=a.length;j++) m[0][j]=j;for(let i=1;i<=b.length;i++){for(let j=1;j<=a.length;j++){m[i][j]=b[i-1]===a[j-1]?m[i-1][j-1]:Math.min(m[i-1][j-1]+1,m[i][j-1]+1,m[i-1][j]+1);}} return m[b.length][a.length];}
-function fuzzyMatch(a,b){a=normalize(a); b=normalize(b); if(a===b) return true; const dist=levenshtein(a,b); return (1-dist/Math.max(a.length,b.length))>=0.8;}
-
-// LOAD ALIASES
+// ŁADOWANIE ALIASÓW
 fetch("aliases.json").then(r=>r.json()).then(a=>aliases=a);
 
-// LOAD SOUNDS
-fetch(API_SOUNDS)
-.then(res=>res.json())
-.then(data=>{
+// ŁADOWANIE DŹWIĘKÓW
+let loadingFrames=["Ładowanie.","Ładowanie..","Ładowanie..."];
+let fi=0;
+let loadingInterval=setInterval(()=>{startBtn.innerText=loadingFrames[fi]; fi=(fi+1)%loadingFrames.length;},350);
+
+fetch(GITHUB_API).then(r=>r.json()).then(data=>{
     sounds=data.filter(x=>x.name.toLowerCase().endsWith(".m4a")).map(x=>({file:x.name,url:x.download_url}));
-    clearInterval(loadingInterval); startBtn.innerText="Graj"; startBtn.disabled=false;
-})
-.catch(()=>{clearInterval(loadingInterval); startBtn.innerText="Błąd!";});
+    clearInterval(loadingInterval);
+    startBtn.innerText="Graj"; startBtn.disabled=false;
+}).catch(()=>{clearInterval(loadingInterval); startBtn.innerText="Błąd!";});
+
+// FUNKCJE NORMALIZACJI I FUZZY MATCHING
+function normalize(t){return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g,"").trim();}
+function levenshtein(a,b){const m=[];for(let i=0;i<=b.length;i++)m[i]=[i];for(let j=0;j<=a.length;j++)m[0][j]=j;for(let i=1;i<=b.length;i++){for(let j=1;j<=a.length;j++){m[i][j]=b[i-1]===a[j-1]?m[i-1][j-1]:Math.min(m[i-1][j-1]+1,m[i][j-1]+1,m[i-1][j]+1);}}return m[b.length][a.length];}
+function fuzzyMatch(a,b){a=normalize(a);b=normalize(b);if(a===b)return true;const dist=levenshtein(a,b);return (1-dist/Math.max(a.length,b.length))>=0.8;}
 
 startBtn.onclick=()=>{startBtn.style.display="none"; document.getElementById("gameArea").style.display="block"; startGame();};
 
-function startGame(){pool=[...sounds]; round=1; score=0; nextRound();}
+function startGame(){pool=[...sounds]; round=1; score=0; maxPoints=1000; nextRound();}
 function updateProgress(){progressBar.style.width=((round-1)/8*100)+"%";}
 
 function nextRound(){
@@ -102,13 +130,16 @@ function nextRound(){
     if(round>8){
         progressBar.style.width="100%";
         document.getElementById("result").innerHTML="<b>Twój wynik: "+score+" pkt</b>";
-        playBtn.style.display="none"; document.getElementById("guessBox").style.display="none"; document.getElementById("backBtn").style.display="inline-block"; document.getElementById("roundInfo").innerText=""; timerEl.innerText=""; return;
+        playBtn.style.display="none"; document.getElementById("guessBox").style.display="none";
+        document.getElementById("backBtn").style.display="inline-block";
+        document.getElementById("roundInfo").innerText=""; timerEl.innerText=""; return;
     }
     updateProgress();
     const idx=Math.floor(Math.random()*pool.length);
     current=pool.splice(idx,1)[0];
     document.getElementById("roundInfo").innerText=`Runda ${round} z 8`;
-    timerEl.innerText="30s"; document.getElementById("answerInput").value=""; document.getElementById("result").innerText="";
+    timerEl.innerText="30s"; timerEl.classList.remove("pulse");
+    document.getElementById("answerInput").value=""; document.getElementById("result").innerText="";
     playBtn.innerText="Odtwarzanie"; playBtn.disabled=true;
     audio=new Audio(current.url);
     audio.onended=()=>{playBtn.innerText="Odtwórz ponownie"; playBtn.disabled=false;};
@@ -116,21 +147,29 @@ function nextRound(){
     startTimer();
 }
 
-function startTimer(){clearInterval(timer); timeLeft=30; timer=setInterval(()=>{timerEl.innerText=timeLeft+"s"; timeLeft--; if(timeLeft<0){clearInterval(timer); handleAnswer(false);}},1000);}
+function startTimer(){
+    clearInterval(timer); timeLeft=30; timerEl.style.color="#eee"; timerEl.classList.remove("pulse");
+    timer=setInterval(()=>{
+        timerEl.innerText=timeLeft+"s";
+        if(timeLeft<=10 && timeLeft>=6) timerEl.style.color="orange";
+        else if(timeLeft<=5 && timeLeft>=3) timerEl.style.color="red";
+        else if(timeLeft<=2){timerEl.style.color="#ff1a1a"; timerEl.classList.add("pulse");}
+        else{timerEl.style.color="#eee"; timerEl.classList.remove("pulse");}
+        timeLeft--; if(timeLeft<0){clearInterval(timer); handleAnswer(false);}
+    },1000);
+}
 
-function playSound(){audio.play(); maxPoints-=50; playBtn.disabled=true; playBtn.innerText="ZABLOKOWANY (Odtwarzanie)"; audio.onended=()=>{playBtn.innerText="Odtwórz ponownie"; playBtn.disabled=false;}}
+function playSound(){audio.play(); maxPoints-=50;if(maxPoints<0) maxPoints=0; playBtn.disabled=true; playBtn.innerText="ZABLOKOWANY (Odtwarzanie)"; audio.onended=()=>{playBtn.innerText="Odtwórz ponownie"; playBtn.disabled=false;}}
 
-// Clean filename → canonical name
 function formatName(f){let name=f.replace(".m4a","").replace(/\d+$/,"").replace(/[-_]/g," "); return name.split(" ").map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(" ");}
 
-// CHECK ANSWER WITH FUZZY MATCHING
 function checkAnswer(){
     let typed=normalize(document.getElementById("answerInput").value);
     if(!typed) return;
     const base=normalize(formatName(current.file));
     let ok=false;
     if(aliases[base]){
-        for(const alt of aliases[base]){ if(fuzzyMatch(typed,alt)){ok=true; break; } }
+        for(const alt of aliases[base]){if(fuzzyMatch(typed,alt)){ok=true; break;}}
     }
     handleAnswer(ok);
 }
