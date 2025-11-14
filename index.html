@@ -4,22 +4,68 @@
 <meta charset="UTF-8">
 <title>SoundGuessr</title>
 <style>
-body { font-family: Arial; background:#111; color:#eee; text-align:center; padding:40px; }
-button { padding:12px 24px; font-size:18px; border:none; border-radius:8px; margin:10px; cursor:pointer; }
-input { padding:10px; width:80%; font-size:16px; border-radius:6px; border:none; margin-top:10px; }
-#gameBox { background:#1d1d1d; padding:25px; border-radius:12px; width:80%; max-width:450px; margin:auto; }
+    body {
+        font-family: Arial, sans-serif;
+        background: #121212;
+        color: #eee;
+        text-align: center;
+        padding: 40px;
+    }
+
+    h1 {
+        color: #56b7ff;
+        margin-bottom: 10px;
+    }
+
+    #gameBox {
+        background: #1e1e1e;
+        padding: 25px;
+        border-radius: 12px;
+        display: inline-block;
+        width: 85%;
+        max-width: 520px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.4);
+    }
+
+    button {
+        padding: 12px 25px;
+        font-size: 18px;
+        margin: 10px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        background: #56b7ff;
+        color: #000;
+        transition: 0.2s;
+    }
+
+    button:hover { background: #7ccaff; }
+
+    input {
+        padding: 10px;
+        width: 80%;
+        margin-top: 10px;
+        font-size: 16px;
+        border-radius: 6px;
+        border: none;
+    }
+
+    #status { font-size: 20px; margin-bottom: 15px; }
+    #result { margin-top: 15px; font-size: 22px; color: #ffdd57; }
 </style>
 </head>
 <body>
 
 <h1>🎧 SoundGuessr</h1>
+
 <div id="gameBox">
-    <div id="status">Ładowanie dźwięków…</div>
+    <div id="status">Ładowanie listy dźwięków…</div>
 
     <button onclick="startGame()">START</button>
     <button onclick="repeatSound()">Odtwórz ponownie (-50 pkt)</button>
 
     <br>
+
     <input id="answerInput" placeholder="Co to za dźwięk?" onkeydown="if(event.key==='Enter') checkAnswer()">
     <button onclick="checkAnswer()">OK</button>
 
@@ -27,65 +73,85 @@ input { padding:10px; width:80%; font-size:16px; border-radius:6px; border:none;
 </div>
 
 <script>
-let soundList = [];    // lista plików z JSON
-let pool = [];         // lista miksowana na rundę
-let current = "";      // aktualny plik
+// ------------------- KONFIG -------------------
+
+const GITHUB_API = "https://api.github.com/repos/SoundGuessr/soundguessr.github.io/contents/sounds";
+
+// ------------------- ZMIENNE GRY -------------------
+
+let sounds = [];        // lista plików z GitHuba
+let pool = [];          // losowana 8-rundowa pula
+let currentFile = "";   // aktualny plik
 let audio = null;
+
 let round = 1;
 let score = 0;
 let maxPoints = 1000;
+
 let timeLeft = 30;
-let timer;
+let timer = null;
 
-// --------------- ŁADOWANIE DŹWIĘKÓW Z JSON -------------------
+// ------------------- POBIERANIE LISTY PLIKÓW -------------------
 
-fetch("sounds/sounds.json")
+fetch(GITHUB_API)
     .then(res => res.json())
     .then(data => {
-        soundList = data.files;
+        // filtrujemy tylko pliki .m4a
+        sounds = data
+            .filter(item => item.name.toLowerCase().endsWith(".m4a"))
+            .map(item => ({
+                file: item.name,
+                url: item.download_url
+            }));
+
+        if (sounds.length === 0) {
+            document.getElementById("status").innerText = "Brak plików .m4a w folderze!";
+            return;
+        }
+
         document.getElementById("status").innerText = "Kliknij START, aby zacząć!";
     })
     .catch(err => {
-        document.getElementById("status").innerText = "Błąd ładowania plików!";
         console.error(err);
+        document.getElementById("status").innerText = "Błąd pobierania plików!";
     });
 
-// --------------- FUNKCJE GRY -------------------
+// ------------------- FUNKCJE GRY -------------------
 
 function startGame() {
-    pool = [...soundList];
+    if (sounds.length === 0) return;
+
+    pool = [...sounds];     // dynamiczna pula z API
     round = 1;
     score = 0;
     maxPoints = 1000;
+
+    document.getElementById("result").innerText = "";
     nextRound();
 }
 
 function nextRound() {
     if (round > 8) {
-        document.getElementById("status").innerText = "Koniec gry! Wynik: " + score;
+        document.getElementById("status").innerText =
+            "Koniec gry! Twój wynik: " + score;
         return;
     }
 
-    // losowanie pliku
-    const idx = Math.floor(Math.random() * pool.length);
-    current = pool.splice(idx, 1)[0];
+    document.getElementById("answerInput").value = "";
+    document.getElementById("result").innerText = "";
 
-    // odtwarzanie
-    audio = new Audio("sounds/" + current);
+    // losowanie bez powtórki
+    const index = Math.floor(Math.random() * pool.length);
+    const chosen = pool.splice(index, 1)[0];
+
+    currentFile = chosen;
+    audio = new Audio(chosen.url);
     audio.play();
 
-    // start timera
     startTimer();
 
     document.getElementById("status").innerText =
-        "Runda " + round + " z 8 • 30s";
-}
-
-function repeatSound() {
-    if (!audio) return;
-    maxPoints -= 50;
-    if (maxPoints < 0) maxPoints = 0;
-    audio.play();
+        `Runda ${round} z 8 • 30s`;
 }
 
 function startTimer() {
@@ -94,7 +160,8 @@ function startTimer() {
 
     timer = setInterval(() => {
         document.getElementById("status").innerText =
-            "Runda " + round + " z 8 • " + timeLeft + "s";
+            `Runda ${round} z 8 • ${timeLeft}s`;
+
         timeLeft--;
 
         if (timeLeft < 0) {
@@ -104,47 +171,52 @@ function startTimer() {
     }, 1000);
 }
 
-function convertName(filename) {
-    // usuń rozszerzenie
-    const name = filename.replace(/\.[^/.]+$/, "");
+function repeatSound() {
+    if (!audio) return;
 
+    audio.play();
+    maxPoints -= 50;
+    if (maxPoints < 0) maxPoints = 0;
+}
+
+function formatName(file) {
+    let name = file.replace(/\.[^/.]+$/, "");     // usuń .m4a
+    name = name.replace(/[-_]/g, " ");            // myślniki i _ → spacje
+
+    // wielkie litery
     return name
-        .replace(/[-_]/g, " ")                // myślniki -> spacje
         .split(" ")
         .map(w => w.charAt(0).toUpperCase() + w.slice(1))
         .join(" ");
 }
 
 function checkAnswer() {
-    const answer = document.getElementById("answerInput").value.trim().toLowerCase();
-    const correctName = convertName(current).toLowerCase();
+    const input = document.getElementById("answerInput").value.trim().toLowerCase();
+    const correctName = formatName(currentFile.file).toLowerCase();
 
-    const isCorrect = answer !== "" && correctName.includes(answer);
+    const result = input !== "" && correctName.includes(input);
 
-    handleAnswer(isCorrect);
+    handleAnswer(result);
 }
 
 function handleAnswer(correct) {
     clearInterval(timer);
 
-    const pretty = convertName(current);
+    const pretty = formatName(currentFile.file);
 
     if (correct) {
         score += maxPoints;
         document.getElementById("result").innerText =
-            "✔️ Dobrze! +" + maxPoints + " pkt";
+            `✔️ Dobrze! +${maxPoints} pkt`;
     } else {
         document.getElementById("result").innerText =
-            "❌ Źle! To było: " + pretty;
+            `❌ Źle! To było: ${pretty}`;
     }
 
     maxPoints = 1000;
     round++;
 
-    setTimeout(() => {
-        document.getElementById("result").innerText = "";
-        nextRound();
-    }, 1500);
+    setTimeout(nextRound, 1500);
 }
 </script>
 
