@@ -1,0 +1,62 @@
+{
+    "drzwi": [
+        "drzwi", "drzwi otwieranie", "otwieranie drzwi", "otwarte drzwi", "otwieranie",
+        "door", "open door", "drzwi open", "otwieram drzwi"
+    ],
+
+    "kran": [
+        "kran", "woda", "odkręcanie kranu", "kran odkręcanie", "odkręcanie", "woda leci",
+        "running water", "tap", "tap water"
+    ],
+
+    "auto": [
+        "auto", "samochód", "car", "vehicle", "karetka auto?", "autko", "samochod"
+    ],
+
+    "auto2": [
+        "auto", "samochód", "drugi samochód", "car", "vehicle", "auto nr 2", "samochód drugi"
+    ],
+
+    "auto3": [
+        "auto", "samochód", "trzeci samochód", "car", "vehicle", "auto nr 3", "samochód trzeci"
+    ],
+
+    "chodzenie": [
+        "chodzenie", "kroki", "stąpanie", "chodzenie człowieka", "chodzenie po ziemi",
+        "walking", "steps", "footsteps", "idzie ktoś"
+    ],
+
+    "cola": [
+        "cola", "otwieranie coli", "napój gazowany", "puszka", "otwieranie puszki", "puszka coli",
+        "coca cola", "cola open", "otwieram colę"
+    ],
+
+    "drzwi2": [
+        "drzwi", "drzwi otwieranie", "otwieranie drzwi", "door", "open door"
+    ],
+
+    "spłuczka": [
+        "spłuczka", "spłuczka toalety", "toaleta", "wc", "spłukuje wodę", "spłukiwanie",
+        "flush", "toilet", "toilet flush", "wc spłuczka"
+    ],
+
+    "liście": [
+        "liście", "chodzenie po liściach", "szelest liści", "liście szeleszczą",
+        "walking on leaves", "rustling leaves", "liscie", "sucha trawa"
+    ],
+
+    "mycie zebow": [
+        "mycie zębów", "szczotkowanie", "szczotkowanie zębów",
+        "mycie zebow", "brush teeth", "brushing", "tooth brushing"
+    ],
+
+    "pralka": [
+        "pralka", "pranie", "washing machine", "laundry", "pralka chodzi", "wirowanie",
+        "pranie w pralce", "odgłos pralki"
+    ],
+
+    "upadektelefonu": [
+        "upadek telefonu", "spadający telefon", "telefon upadł", "phone drop",
+        "falling phone", "telefon spada", "upuszczenie telefonu"
+    ]
+}
