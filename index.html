@@ -301,8 +301,19 @@ function playSound(){
 }
 
 function formatName(f){
-    return f.replace(".m4a","").replace(/[-_]/g," ").split(" ").map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(" ");
+    // usuń rozszerzenie
+    let name = f.replace(".m4a","");
+
+    // usuń końcowe cyfry np. Drzwi2 → Drzwi
+    name = name.replace(/\d+$/,"");
+
+    // zamień myślniki/underscore na spacje
+    name = name.replace(/[-_]/g," ");
+
+    // kapitalizacja pierwszej litery każdego słowa
+    return name.split(" ").map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(" ");
 }
+
 
 function checkAnswer(){
     const typed=document.getElementById("answerInput").value.trim().toLowerCase();
