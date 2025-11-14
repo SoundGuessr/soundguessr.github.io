@@ -6,82 +6,127 @@
 <style>
     body {
         font-family: Arial, sans-serif;
-        background: #121212;
-        color: #eee;
+        background: #0e0e0e;
+        color: #fff;
         text-align: center;
-        padding: 40px;
+        margin: 0;
+        padding: 0;
     }
 
     h1 {
-        color: #56b7ff;
-        margin-bottom: 10px;
+        margin-top: 40px;
+        font-size: 42px;
+        color: #4ec3ff;
     }
 
-    #gameBox {
-        background: #1e1e1e;
-        padding: 25px;
-        border-radius: 12px;
-        display: inline-block;
-        width: 85%;
-        max-width: 520px;
-        box-shadow: 0 0 15px rgba(0,0,0,0.4);
+    #container {
+        margin: 40px auto;
+        width: 90%;
+        max-width: 500px;
+        background: #181818;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
     }
 
     button {
-        padding: 12px 25px;
-        font-size: 18px;
+        padding: 14px 26px;
         margin: 10px;
-        border-radius: 8px;
+        font-size: 20px;
+        border-radius: 12px;
         border: none;
         cursor: pointer;
-        background: #56b7ff;
+        background: #4ec3ff;
         color: #000;
+        font-weight: bold;
         transition: 0.2s;
     }
 
-    button:hover { background: #7ccaff; }
-
-    input {
-        padding: 10px;
-        width: 80%;
-        margin-top: 10px;
-        font-size: 16px;
-        border-radius: 6px;
-        border: none;
+    button:hover {
+        background: #76d4ff;
     }
 
-    #status { font-size: 20px; margin-bottom: 15px; }
-    #result { margin-top: 15px; font-size: 22px; color: #ffdd57; }
+    #bigButton {
+        width: 100%;
+        background: #4ec3ff;
+        font-size: 28px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    #info {
+        font-size: 22px;
+        margin: 15px 0;
+        color: #ccc;
+    }
+
+    #roundInfo {
+        font-size: 26px;
+        margin: 20px 0;
+        color: #4ec3ff;
+    }
+
+    #timer {
+        font-size: 40px;
+        margin: 10px 0;
+        color: #ff5252;
+    }
+
+    #guessBox {
+        margin-top: 20px;
+        display: none;
+    }
+
+    input {
+        width: 90%;
+        padding: 12px;
+        font-size: 20px;
+        border: none;
+        border-radius: 8px;
+    }
+
+    #result {
+        margin-top: 20px;
+        font-size: 26px;
+    }
 </style>
 </head>
 <body>
 
 <h1>🎧 SoundGuessr</h1>
 
-<div id="gameBox">
-    <div id="status">Ładowanie listy dźwięków…</div>
+<div id="container">
 
-    <button onclick="startGame()">START</button>
-    <button onclick="repeatSound()">Odtwórz ponownie (-50 pkt)</button>
+    <div id="state">Ładowanie dźwięków…</div>
 
-    <br>
+    <button id="startBtn" onclick="startGame()" style="display:none;">START</button>
 
-    <input id="answerInput" placeholder="Co to za dźwięk?" onkeydown="if(event.key==='Enter') checkAnswer()">
-    <button onclick="checkAnswer()">OK</button>
+    <div id="gameArea" style="display:none;">
+        <div id="roundInfo"></div>
+        <div id="timer"></div>
 
-    <div id="result"></div>
+        <button id="playBtn" onclick="playSound()" style="margin-top:20px;">▶ ODTWÓRZ DŹWIĘK</button>
+        <div id="info">Każde dodatkowe odtworzenie: <b>-50 pkt</b></div>
+
+        <div id="guessBox">
+            <h2>Co to za dźwięk?</h2>
+            <input id="answerInput" placeholder="np. Upadek Telefonu"
+                   onkeydown="if(event.key==='Enter') checkAnswer()">
+            <button onclick="checkAnswer()">Zatwierdź</button>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
 </div>
 
-<script>
-// ------------------- KONFIG -------------------
 
+<script>
 const GITHUB_API = "https://api.github.com/repos/SoundGuessr/soundguessr.github.io/contents/sounds";
 
-// ------------------- ZMIENNE GRY -------------------
-
-let sounds = [];        // lista plików z GitHuba
-let pool = [];          // losowana 8-rundowa pula
-let currentFile = "";   // aktualny plik
+let sounds = [];
+let pool = [];
+let current = null;
 let audio = null;
 
 let round = 1;
@@ -89,69 +134,60 @@ let score = 0;
 let maxPoints = 1000;
 
 let timeLeft = 30;
-let timer = null;
-
-// ------------------- POBIERANIE LISTY PLIKÓW -------------------
+let timer;
 
 fetch(GITHUB_API)
     .then(res => res.json())
     .then(data => {
-        // filtrujemy tylko pliki .m4a
         sounds = data
-            .filter(item => item.name.toLowerCase().endsWith(".m4a"))
-            .map(item => ({
-                file: item.name,
-                url: item.download_url
-            }));
+            .filter(x => x.name.toLowerCase().endsWith(".m4a"))
+            .map(x => ({ file: x.name, url: x.download_url }));
 
         if (sounds.length === 0) {
-            document.getElementById("status").innerText = "Brak plików .m4a w folderze!";
+            document.getElementById("state").innerText = "Brak plików .m4a!";
             return;
         }
 
-        document.getElementById("status").innerText = "Kliknij START, aby zacząć!";
-    })
-    .catch(err => {
-        console.error(err);
-        document.getElementById("status").innerText = "Błąd pobierania plików!";
+        document.getElementById("state").innerText = "Wszystko gotowe!";
+        document.getElementById("startBtn").style.display = "inline-block";
     });
 
-// ------------------- FUNKCJE GRY -------------------
-
 function startGame() {
-    if (sounds.length === 0) return;
-
-    pool = [...sounds];     // dynamiczna pula z API
+    pool = [...sounds];
     round = 1;
     score = 0;
     maxPoints = 1000;
 
-    document.getElementById("result").innerText = "";
+    document.getElementById("startBtn").style.display = "none";
+    document.getElementById("state").style.display = "none";
+    document.getElementById("gameArea").style.display = "block";
+
     nextRound();
 }
 
 function nextRound() {
     if (round > 8) {
-        document.getElementById("status").innerText =
-            "Koniec gry! Twój wynik: " + score;
+        document.getElementById("roundInfo").innerText = "";
+        document.getElementById("timer").innerText = "";
+        document.getElementById("info").style.display = "none";
+        document.getElementById("playBtn").style.display = "none";
+        document.getElementById("guessBox").style.display = "none";
+        document.getElementById("result").innerHTML = "<br><b>Twój wynik: " + score + " pkt</b>";
         return;
     }
 
+    const idx = Math.floor(Math.random() * pool.length);
+    current = pool.splice(idx, 1)[0];
+
+    document.getElementById("roundInfo").innerText = `Runda ${round} z 8`;
+    document.getElementById("guessBox").style.display = "block";
     document.getElementById("answerInput").value = "";
     document.getElementById("result").innerText = "";
 
-    // losowanie bez powtórki
-    const index = Math.floor(Math.random() * pool.length);
-    const chosen = pool.splice(index, 1)[0];
-
-    currentFile = chosen;
-    audio = new Audio(chosen.url);
+    audio = new Audio(current.url);
     audio.play();
 
     startTimer();
-
-    document.getElementById("status").innerText =
-        `Runda ${round} z 8 • 30s`;
 }
 
 function startTimer() {
@@ -159,9 +195,7 @@ function startTimer() {
     timeLeft = 30;
 
     timer = setInterval(() => {
-        document.getElementById("status").innerText =
-            `Runda ${round} z 8 • ${timeLeft}s`;
-
+        document.getElementById("timer").innerText = timeLeft + "s";
         timeLeft--;
 
         if (timeLeft < 0) {
@@ -171,46 +205,39 @@ function startTimer() {
     }, 1000);
 }
 
-function repeatSound() {
-    if (!audio) return;
-
+function playSound() {
     audio.play();
     maxPoints -= 50;
     if (maxPoints < 0) maxPoints = 0;
 }
 
-function formatName(file) {
-    let name = file.replace(/\.[^/.]+$/, "");     // usuń .m4a
-    name = name.replace(/[-_]/g, " ");            // myślniki i _ → spacje
-
-    // wielkie litery
-    return name
-        .split(" ")
-        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(" ");
+function formatName(f) {
+    return f.replace(".m4a", "")
+            .replace(/[-_]/g, " ")
+            .split(" ")
+            .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(" ");
 }
 
 function checkAnswer() {
-    const input = document.getElementById("answerInput").value.trim().toLowerCase();
-    const correctName = formatName(currentFile.file).toLowerCase();
+    const typed = document.getElementById("answerInput").value.trim().toLowerCase();
+    const correct = formatName(current.file).toLowerCase();
 
-    const result = input !== "" && correctName.includes(input);
+    const ok = typed.length > 0 && correct.includes(typed);
 
-    handleAnswer(result);
+    handleAnswer(ok);
 }
 
-function handleAnswer(correct) {
+function handleAnswer(ok) {
     clearInterval(timer);
 
-    const pretty = formatName(currentFile.file);
-
-    if (correct) {
+    if (ok) {
         score += maxPoints;
-        document.getElementById("result").innerText =
-            `✔️ Dobrze! +${maxPoints} pkt`;
+        document.getElementById("result").innerHTML =
+            `<span style="color:#5dff80;">✔ Dobrze! +${maxPoints} pkt</span>`;
     } else {
-        document.getElementById("result").innerText =
-            `❌ Źle! To było: ${pretty}`;
+        document.getElementById("result").innerHTML =
+            `<span style="color:#ff6b6b;">✘ Źle! To było: ${formatName(current.file)}</span>`;
     }
 
     maxPoints = 1000;
