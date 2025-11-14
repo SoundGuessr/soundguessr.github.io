@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <title>SoundGuessr</title>
+
+<!-- Puter AI -->
+<script src="https://js.puter.com/v2/"></script>
+
 <style>
 body {
     font-family: 'Poppins', sans-serif;
@@ -20,9 +24,9 @@ body {
     background: #1e1e1e;
     width: 95%;
     max-width: 480px;
-    border-radius: 20px 18px 23px 19px; /* nierówne narożniki */
+    border-radius: 20px 18px 23px 19px;
     padding: 30px 22px;
-    box-shadow: 0 7px 20px rgba(0,0,0,0.55), 0 2px 5px rgba(255,255,255,0.02); /* lekka nieregularność w cieniu */
+    box-shadow: 0 7px 20px rgba(0,0,0,0.55), 0 2px 5px rgba(255,255,255,0.02);
     text-align: center;
     transition: all 0.4s ease;
 }
@@ -31,8 +35,8 @@ h1 {
     font-size: 36px;
     margin-bottom: 24px;
     color: #ff6b6b;
-    letter-spacing: 0.6px; /* lekko nieregularne */
-    transform: rotate(-0.3deg); /* minimalne przekręcenie „ludzkie” */
+    letter-spacing: 0.6px;
+    transform: rotate(-0.3deg);
 }
 
 button {
@@ -40,7 +44,7 @@ button {
     margin: 10px 7px;
     font-size: 18px;
     font-weight: 600;
-    border-radius: 13px 15px 12px 16px; /* nierówny border */
+    border-radius: 13px 15px 12px 16px;
     border: none;
     cursor: pointer;
     transition: transform 0.25s ease, box-shadow 0.25s ease;
@@ -50,7 +54,7 @@ button {
     background: linear-gradient(48deg,#ff6b6b,#ff9b6b);
     color: #fff;
     font-size: 24px;
-    width: 78%; /* lekko nieregularna szerokość */
+    width: 78%;
     margin-top: 22px;
     box-shadow: 0 0 10px rgba(255,107,107,0.5), inset 0 -2px 5px rgba(0,0,0,0.2);
 }
@@ -89,7 +93,6 @@ button {
     font-size: 18px;
     margin-top: 10px;
     box-shadow: 0 0 8px rgba(255,107,107,0.45);
-    transform: rotate(-0.2deg);
 }
 
 #roundTimer {
@@ -97,20 +100,6 @@ button {
     justify-content: space-between;
     font-size: 22px;
     margin-bottom: 10px;
-}
-
-#timer {
-    transition: all 0.35s ease;
-}
-
-.pulse {
-    animation: pulse 0.7s infinite alternate;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.16); }
-    100% { transform: scale(1); }
 }
 
 #progressContainer {
@@ -129,12 +118,6 @@ button {
     transition: width 0.48s ease;
 }
 
-#info {
-    font-size: 16px;
-    margin-top: 8px;
-    color: #ccc;
-}
-
 #result {
     font-size: 22px;
     margin-top: 20px;
@@ -150,9 +133,7 @@ button {
     margin-top: 15px;
     display: none;
     box-shadow: 0 0 9px rgba(255,165,0,0.45);
-    transform: rotate(0.2deg);
 }
-
 </style>
 </head>
 <body>
@@ -160,9 +141,10 @@ button {
 <div id="container">
     <h1>🎧 SoundGuessr</h1>
 
-    <button id="startBtn" disabled>Ładowanie</button>
+    <button id="startBtn" disabled>Ładowanie...</button>
 
     <div id="gameArea" style="display:none;">
+
         <div id="progressContainer">
             <div id="progressBar"></div>
         </div>
@@ -178,7 +160,8 @@ button {
         <div id="guessBox">
             <h2>Co to za dźwięk?</h2>
             <input id="answerInput" placeholder="np. Upadek Telefonu"
-                   onkeydown="if(event.key==='Enter') checkAnswer()">
+                onkeydown="if(event.key==='Enter') checkAnswer()">
+
             <button onclick="checkAnswer()">Zatwierdź</button>
         </div>
 
@@ -198,52 +181,48 @@ let playBtn = document.getElementById("playBtn");
 let progressBar = document.getElementById("progressBar");
 let timerEl = document.getElementById("timer");
 
-let loadingTexts=["Ładowanie.","Ładowanie..","Ładowanie...","Ładowanie.","Ładowanie..","Ładowanie..."];
-let loadingIndex=0;
-let loadingInterval = setInterval(()=>{
-    startBtn.innerText=loadingTexts[loadingIndex];
-    loadingIndex=(loadingIndex+1)%loadingTexts.length;
-}, 400);
+let loadingFrames=["Ładowanie.","Ładowanie..","Ładowanie...","Ładowanie"];
+let li=0;
+
+let loadingInterval=setInterval(()=>{
+    startBtn.innerText=loadingFrames[li];
+    li=(li+1)%loadingFrames.length;
+},350);
 
 fetch(GITHUB_API)
     .then(res=>res.json())
     .then(data=>{
-        sounds=data.filter(x=>x.name.toLowerCase().endsWith(".m4a"))
-                   .map(x=>({file:x.name,url:x.download_url}));
+        sounds = data.filter(x=>x.name.toLowerCase().endsWith(".m4a"))
+                     .map(x=>({file:x.name,url:x.download_url}));
+
         clearInterval(loadingInterval);
-        if(sounds.length===0){
-            startBtn.innerText="Brak plików!";
-            return;
-        }
         startBtn.innerText="Graj";
         startBtn.disabled=false;
     })
-    .catch(err=>{
-        console.error(err);
+    .catch(()=>{
         clearInterval(loadingInterval);
         startBtn.innerText="Błąd!";
     });
 
-startBtn.addEventListener("click",()=>{
+startBtn.onclick=()=>{
     startBtn.style.display="none";
     document.getElementById("gameArea").style.display="block";
     startGame();
-});
+};
 
 function startGame(){
     pool=[...sounds];
-    round=1; score=0; maxPoints=1000;
+    round=1; score=0;
     nextRound();
 }
 
 function updateProgress(){
-    let percent = ((round-1)/8)*100;
-    progressBar.style.width = percent + "%";
+    progressBar.style.width=((round-1)/8)*100+"%";
 }
 
 function nextRound(){
     document.getElementById("backBtn").style.display="none";
-    if(audio) audio.pause(); // przerywamy poprzedni dźwięk
+    if(audio) audio.pause();
 
     if(round>8){
         progressBar.style.width="100%";
@@ -263,8 +242,6 @@ function nextRound(){
 
     document.getElementById("roundInfo").innerText=`Runda ${round} z 8`;
     timerEl.innerText="30s";
-    timerEl.classList.remove("pulse");
-    document.getElementById("guessBox").style.display="block";
     document.getElementById("answerInput").value="";
     document.getElementById("result").innerText="";
     
@@ -272,11 +249,10 @@ function nextRound(){
     playBtn.disabled=true;
 
     audio=new Audio(current.url);
-    audio.onended = ()=>{
+    audio.onended=()=>{
         playBtn.innerText="Odtwórz ponownie";
         playBtn.disabled=false;
-    }
-
+    };
     audio.play();
     startTimer();
 }
@@ -284,22 +260,9 @@ function nextRound(){
 function startTimer(){
     clearInterval(timer);
     timeLeft=30;
-    timerEl.style.color="#eee";
-    timerEl.classList.remove("pulse");
 
     timer=setInterval(()=>{
         timerEl.innerText=timeLeft+"s";
-        if(timeLeft<=10 && timeLeft>=6){
-            timerEl.style.color="orange";
-        } else if(timeLeft<=5 && timeLeft>=3){
-            timerEl.style.color="red";
-        } else if(timeLeft<=2){
-            timerEl.style.color="#ff1a1a";
-            timerEl.classList.add("pulse");
-        } else {
-            timerEl.style.color="#eee";
-            timerEl.classList.remove("pulse");
-        }
         timeLeft--;
         if(timeLeft<0){
             clearInterval(timer);
@@ -311,34 +274,56 @@ function startTimer(){
 function playSound(){
     audio.play();
     maxPoints-=50;
-    if(maxPoints<0) maxPoints=0;
     playBtn.disabled=true;
     playBtn.innerText="ZABLOKOWANY (Odtwarzanie)";
-    audio.onended = ()=>{
+    audio.onended=()=>{
         playBtn.innerText="Odtwórz ponownie";
         playBtn.disabled=false;
     }
 }
 
 function formatName(f){
-    // usuń rozszerzenie
-    let name = f.replace(".m4a","");
-
-    // usuń końcowe cyfry np. Drzwi2 → Drzwi
-    name = name.replace(/\d+$/,"");
-
-    // zamień myślniki/underscore na spacje
-    name = name.replace(/[-_]/g," ");
-
-    // kapitalizacja pierwszej litery każdego słowa
-    return name.split(" ").map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(" ");
+    let name=f.replace(".m4a","");
+    name=name.replace(/\d+$/,"");
+    name=name.replace(/[-_]/g," ");
+    return name.split(" ")
+               .map(w=>w.charAt(0).toUpperCase()+w.slice(1))
+               .join(" ");
 }
 
+/* 🔥🔥 AI CHECK — najważniejszy element 🔥🔥 */
+async function aiCheck(correct, user) {
+    const prompt = `
+Prawidłowa odpowiedź: "${correct}"
+Odpowiedź użytkownika: "${user}"
 
-function checkAnswer(){
-    const typed=document.getElementById("answerInput").value.trim().toLowerCase();
-    const correct=formatName(current.file).toLowerCase();
-    handleAnswer(typed.length>0 && correct.includes(typed));
+Jeśli odpowiedź użytkownika jest poprawna, synonimiczna lub bardzo bliska znaczeniowo → wypisz tylko: y
+Jeśli jest błędna → wypisz tylko: n
+NIC więcej.
+    `;
+
+    try {
+        const res = await puter.ai.chat(prompt, {model:"gpt-5-nano"});
+        const out = String(res).trim().toLowerCase();
+        return out === "y";
+    } catch {
+        return false;
+    }
+}
+
+async function checkAnswer(){
+    let typed = document.getElementById("answerInput").value.trim();
+    if(!typed) return;
+
+    let correct=formatName(current.file);
+
+    document.getElementById("answerInput").disabled=true;
+
+    let ok = await aiCheck(correct, typed);
+
+    document.getElementById("answerInput").disabled=false;
+
+    handleAnswer(ok);
 }
 
 function handleAnswer(ok){
@@ -346,9 +331,10 @@ function handleAnswer(ok){
     if(ok){
         score+=maxPoints;
         document.getElementById("result").innerHTML=`<span style="color:#2ecc71;">✔ Dobrze! +${maxPoints} pkt</span>`;
-    }else{
+    } else {
         document.getElementById("result").innerHTML=`<span style="color:#e74c3c;">✘ Źle! To było: ${formatName(current.file)}</span>`;
     }
+
     maxPoints=1000;
     round++;
     setTimeout(nextRound,1500);
